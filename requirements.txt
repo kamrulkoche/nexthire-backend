@@ -1,3 +1,5 @@
+# Full dev install. Runtime deps are ALSO listed in pyproject.toml [project]
+# (what Vercel installs) — change a pin in both places.
 # FastAPI and web framework
 fastapi==0.136.3
 uvicorn[standard]==0.49.0
