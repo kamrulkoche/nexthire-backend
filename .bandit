@@ -1,0 +1,6 @@
+[bandit]
+# B101: assert used in route handlers as a type guard (guaranteed by the auth dependency)
+# B105: hardcoded password detection - false positives on enum values and settings field names
+# B106: flags token_type="bearer" in LoginResponseSchema. That is the OAuth2
+#       scheme name from RFC 6750, not a credential.
+skips = B101,B105,B106

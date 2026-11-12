@@ -1,0 +1,1 @@
+"""HGS Backend application package."""

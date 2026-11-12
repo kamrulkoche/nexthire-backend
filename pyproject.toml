@@ -1,0 +1,78 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+    "smoke: Smoke tests",
+]
+
+# As in hgs-backend, `--cov-fail-under` is deliberately NOT in addopts: a single-test
+# run must not fail on global coverage. The gate lives on `make test-cov`.
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_incomplete_defs = true
+
+# Override for repository files - PyMongo documents are untyped dicts
+[[tool.mypy.overrides]]
+module = "*.infrastructure.repositories.*"
+disable_error_code = ["arg-type", "attr-defined", "union-attr", "call-overload", "var-annotated", "operator", "misc", "unused-ignore", "type-var"]
+
+# Override for the generic base repository: entity fields set through the
+# TypeVar (``updated_at``) are not visible to mypy.
+[[tool.mypy.overrides]]
+module = "src.shared.infrastructure.base_repository"
+disable_error_code = ["attr-defined"]
+
+# Override for API route files - FastAPI infers return types from response_model,
+# and Pydantic schema instantiation with optional fields
+[[tool.mypy.overrides]]
+module = "*.api.routes.*"
+disable_error_code = ["no-untyped-def", "call-arg", "call-overload", "arg-type", "attr-defined", "union-attr"]
+
+# Override for module-level api/dependencies.py files - FastAPI DI builders return inferred types
+[[tool.mypy.overrides]]
+module = "*.api.dependencies"
+disable_error_code = ["no-untyped-def", "arg-type", "attr-defined", "union-attr", "call-overload", "unused-ignore"]
+
+# Override for use cases - Pydantic construction from entities and raw documents.
+[[tool.mypy.overrides]]
+module = "*.application.use_cases.*"
+disable_error_code = ["arg-type", "attr-defined", "union-attr", "call-overload", "no-untyped-def", "operator", "misc", "unused-ignore"]
+
+# Override for domain entities - Pydantic Field overloads and ClassVar index lists.
+[[tool.mypy.overrides]]
+module = "*.domain.entities.*"
+disable_error_code = ["call-overload", "unused-ignore"]
+
+# Override for seed/bootstrap scripts - raw document access
+[[tool.mypy.overrides]]
+module = "scripts.*"
+disable_error_code = ["arg-type", "assignment", "union-attr", "attr-defined", "var-annotated", "operator", "index", "call-arg", "no-untyped-def", "call-overload", "unused-ignore"]
+
+[tool.bandit]
+# Bandit reads from the .bandit file via --ini (not pyproject.toml directly).
+# Kept in sync with it, as the reference project does.
+# B101: assert used as a type guard in routes (guaranteed by the auth dependency)
+# B105: false positives on enum values and settings field names
+# B106: flags token_type="bearer" — the OAuth2 scheme name, not a credential
+skips = ["B101", "B105", "B106"]

@@ -1,0 +1,43 @@
+# FastAPI and web framework
+fastapi==0.136.3
+uvicorn[standard]==0.49.0
+pydantic==2.13.5
+pydantic-settings==2.14.2
+
+# Database
+pymongo==4.19.0             # MongoDB driver (sync; see shared/infrastructure/database.py)
+tzdata==2026.4              # zoneinfo database — Windows ships none
+
+# Background work
+apscheduler==3.11.0         # The collection scheduler, in-process (see
+                            # shared/infrastructure/tasks/scheduler.py)
+
+# Parsing untrusted feeds
+defusedxml==0.7.1           # RSS/Atom feeds an admin points us at: refuses entity
+                            # expansion and external entities (XXE, billion laughs)
+
+# Validation
+email-validator>=2.3.0
+
+# Environment variables
+python-dotenv==1.2.3
+
+# Authentication & Authorization
+PyJWT==2.13.0               # JWT access tokens (HS256) — same lib/version as hgs-backend
+bcrypt>=4.1.0               # Password hashing, used DIRECTLY as in hgs-backend — not via passlib, whose
+                            # last release was 2020 and which breaks against bcrypt 5.x.
+
+# Development and testing
+pytest==9.0.3
+pytest-asyncio>=1.2.0
+pytest-cov>=7.0.0
+mongomock==4.3.0            # In-memory MongoDB for the test suite
+httpx>=0.28.1               # Connectors, the Gemini client, and the TestClient transport
+
+# Linting and code quality
+ruff==0.15.16               # Replaces black, isort, flake8
+mypy==2.1.0                 # Type checking
+bandit>=1.7.5               # Security scanning
+
+openpyxl==3.1.5             # Lead Finder: Excel (.xlsx) exports
+fpdf2==2.9.0                # Lead Finder: PDF exports (pure Python, no system deps)

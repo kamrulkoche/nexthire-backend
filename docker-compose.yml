@@ -1,0 +1,48 @@
+# Docker Compose for the NextHire AI backend.
+#
+# NextHire AI owns its own MongoDB. For local development only the database
+# runs here; start it with:
+#
+#   docker compose up -d mongo
+#
+# and point MONGODB_URL in .env at mongodb://nexthire:nexthire@localhost:27018/?authSource=admin
+# (27018, not 27017, so it never collides with another project's MongoDB).
+#
+# `docker compose up` with no service name also builds and runs the API.
+
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: nexthire-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: nexthire
+      MONGO_INITDB_ROOT_PASSWORD: nexthire
+      MONGO_INITDB_DATABASE: nexthire
+    ports:
+      # Loopback only: the database is never reachable from the network.
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: .
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URL: mongodb://nexthire:nexthire@mongo:27017/?authSource=admin
+    # Indexes are created on startup (shared/infrastructure/database.ensure_indexes).
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8002
+
+volumes:
+  mongodata:
