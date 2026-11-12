@@ -4,6 +4,7 @@ Configuration is loaded in order (later overrides earlier):
 1. config/.env.base (common settings for all environments)
 2. config/.env.{environment} (environment-specific: dev, test, prod)
 3. .env file (local development overrides - gitignored)
+4. the host's own environment variables (Vercel / Docker / shell) — always win
 
 The same loader as hgs-backend, which took it from sp-company-backend. The
 reference's fourth layer, AWS Secrets Manager, is omitted for the same reason
@@ -34,6 +35,11 @@ _RELAXED_ENVIRONMENTS = {"dev", "test"}
 # Get ENVIRONMENT from the OS first (set on the server, default dev for local).
 _environment = os.getenv("ENVIRONMENT", "dev").lower()
 
+# Variables the host itself set (Vercel, Docker, a shell). They win over every
+# file below: a deployment's dashboard must not be silently overridden by a
+# committed config/.env.prod (its CORS_ORIGINS placeholder, SCHEDULER_ENABLED).
+_host_environment = dict(os.environ)
+
 # 1. Base config (common to all environments)
 _base_config = PROJECT_ROOT / "config" / ".env.base"
 if _base_config.exists():
@@ -54,6 +60,9 @@ if _env_config.exists():
 _root_env = PROJECT_ROOT / ".env"
 if _root_env.exists() and _environment != "test":
     load_dotenv(_root_env, override=True)
+
+# Re-apply the host's own values on top of everything the files set.
+os.environ.update(_host_environment)
 
 
 class Settings(BaseSettings):

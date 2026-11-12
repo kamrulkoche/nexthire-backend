@@ -1,3 +1,8 @@
+[tool.vercel]
+# Vercel's FastAPI preset looks for a top-level `app` in main.py; ours is built
+# by the factory in src/api/app.py.
+entrypoint = "src.api.app:app"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

@@ -101,8 +101,16 @@ def setup_logging(
 
     log_file = log_file or settings.log_file
     if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            log_path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            # Probe: a read-only filesystem (Vercel, most serverless hosts)
+            # lets mkdir of an existing dir pass but refuses the file itself.
+            with open(log_path, "a", encoding="utf-8"):
+                pass
+        except OSError:
+            # Console logging only; the host captures stdout.
+            log_file = None
 
     json_formatter = JSONFormatter()
     console_formatter = (
